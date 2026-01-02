@@ -1,15 +1,17 @@
 """Pytest configuration and fixtures for AstraGuard-AI test suite."""
 import pytest
 import sys
+import asyncio
 from pathlib import Path
 from datetime import datetime
 
-# Configure pytest-asyncio mode (optional - only if installed)
+# Try to register pytest-asyncio plugin if available
 try:
     import pytest_asyncio
     pytest_plugins = ('pytest_asyncio',)
 except ImportError:
-    pytest_plugins = ()
+    # pytest_asyncio not available, use manual async fixtures instead
+    pass
 
 # Ensure project modules are importable
 sys.path.insert(0, str(Path(__file__).parent.parent))
