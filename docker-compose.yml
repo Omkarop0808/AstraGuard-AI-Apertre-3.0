@@ -1,10 +1,56 @@
-version: "3.8"
-
 services:
-  # Redis service for distributed coordination (Issue #18)
+  # FastAPI Backend
+  api:
+    image: astraguard-ai:latest
+    container_name: astraguard-api
+    ports:
+      - "8000:8000"
+      - "8501:8501"
+    environment:
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: ${DEBUG:-false}
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./anomaly:/app/anomaly
+      - ./core:/app/core
+      - ./state_machine:/app/state_machine
+      - ./memory_engine:/app/memory_engine
+      - ./config:/app/config
+      - ./logs:/app/logs
+      - app_cache:/app/.cache
+    networks:
+      - astra-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # Redis Cache & Distributed Coordination
   redis:
     image: redis:7-alpine
-    container_name: astra-guard-redis
+    container_name: astraguard-redis
     ports:
       - "6379:6379"
     environment:
@@ -14,45 +60,22 @@ services:
     networks:
       - astra-network
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-    restart: unless-stopped
-
-  # AstraGuard AI Backend (scalable multi-instance)
-  astra-guard:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - REDIS_URL=redis://redis:6379
-      - LOG_LEVEL=INFO
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app/backend
-      - ./config:/app/config
-      - ./logs:/app/logs
-    networks:
-      - astra-network
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/live" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
     restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     deploy:
-      replicas: 1  # Change to 3+ for multi-instance testing
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
-  # Optional: Prometheus for metrics collection
+  # Prometheus Metrics
   prometheus:
     image: prom/prometheus:latest
-    container_name: astra-guard-prometheus
+    container_name: astraguard-prometheus
     ports:
       - "9090:9090"
     volumes:
@@ -63,17 +86,24 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
-  # Optional: Grafana for visualization
+  # Grafana Dashboards
   grafana:
     image: grafana/grafana:latest
-    container_name: astra-guard-grafana
+    container_name: astraguard-grafana
     ports:
       - "3000:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_INSTALL_PLUGINS: 'redis-datasource'
     volumes:
       - grafana_data:/var/lib/grafana
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
@@ -83,6 +113,11 @@ services:
     depends_on:
       - prometheus
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
 networks:
   astra-network:
@@ -94,4 +129,6 @@ volumes:
   prometheus_data:
     driver: local
   grafana_data:
+    driver: local
+  app_cache:
     driver: local

@@ -1,0 +1,92 @@
+version: "3.8"
+
+# Chaos Engineering Environment for Local Testing
+# Run: docker-compose -f docker-compose.chaos.yml up
+
+services:
+  # Redis service for distributed coordination
+  redis:
+    image: redis:7-alpine
+    container_name: astra-chaos-redis
+    ports:
+      - "6379:6379"
+    environment:
+      - REDIS_APPENDONLY=yes
+    volumes:
+      - chaos_redis_data:/data
+    networks:
+      - chaos-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # AstraGuard AI Backend (single instance for canary testing)
+  astra-guard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=DEBUG
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app/backend
+      - ./config:/app/config
+      - ./logs:/app/logs
+    networks:
+      - chaos-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/live" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: astra-chaos-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - chaos_prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - chaos-network
+    restart: unless-stopped
+
+  # Chaos Engine Controller
+  chaos-controller:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python -m backend.chaos_engine
+    depends_on:
+      - astra-guard
+      - redis
+      - prometheus
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+    networks:
+      - chaos-network
+    restart: "no"
+
+networks:
+  chaos-network:
+    driver: bridge
+
+volumes:
+  chaos_redis_data:
+  chaos_prometheus_data:

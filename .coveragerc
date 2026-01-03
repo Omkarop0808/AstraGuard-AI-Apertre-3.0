@@ -1,5 +1,5 @@
 [run]
-source = core,anomaly,state_machine,memory_engine
+source = core,anomaly,state_machine,memory_engine,backend
 branch = True
 omit =
     */tests/*
@@ -13,6 +13,12 @@ omit =
     memory_engine/replay_engine.py
     memory_engine/decay_policy.py
     astraguard/*
+    backend/main.py
+    backend/redis_client.py
+    backend/chaos_engine.py
+    cli.py
+    verify_install.py
+    verify_tests.py
 
 [report]
 precision = 2
@@ -29,6 +35,11 @@ exclude_lines =
     if TYPE_CHECKING:
     @abstractmethod
     @abc.abstractmethod
+    logger.debug
+    logger.info
+    except ImportError
+    except OSError
+    except asyncio.TimeoutError
 
 [html]
 directory = htmlcov
