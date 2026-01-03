@@ -14,7 +14,7 @@ COPY requirements.txt .
 
 # Install Python dependencies with CPU-only torch
 RUN pip install --no-cache-dir --only-binary=:all: \
-    --index-url https://download.pytorch.org/whl/cpu \
+    --extra-index-url https://download.pytorch.org/whl/cpu \
     -r requirements.txt && \
     rm -rf ~/.cache/pip /tmp/* /var/tmp/*
 

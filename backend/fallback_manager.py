@@ -12,7 +12,7 @@ Integrates with HealthMonitor for automatic cascade triggering.
 
 import logging
 from enum import Enum
-from typing import Dict, Any, Optional, Callable, Awaitable
+from typing import Dict, Any, Callable, Awaitable
 from datetime import datetime
 from threading import Lock
 

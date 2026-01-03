@@ -10,11 +10,10 @@ Provides:
 """
 
 import asyncio
-import json
 import uuid
 import logging
 import math
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from collections import Counter

@@ -4,7 +4,7 @@ from datetime import datetime
 import logging
 
 # Import error handling
-from core.error_handling import StateTransitionError, safe_execute
+from core.error_handling import StateTransitionError
 from core.component_health import get_health_monitor
 
 logger = logging.getLogger(__name__)

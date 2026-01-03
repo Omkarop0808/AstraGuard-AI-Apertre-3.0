@@ -15,8 +15,7 @@ Integrates with Prometheus metrics for observability.
 import asyncio
 import time
 import logging
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+from typing import Dict, Optional
 import aiohttp
 
 try:

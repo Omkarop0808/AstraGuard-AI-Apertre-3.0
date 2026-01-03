@@ -15,11 +15,11 @@ The policy engine implements a decision tree:
 import logging
 from typing import Dict, List, Any, Optional
 from enum import Enum
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 from state_machine.state_engine import MissionPhase
 
 # Import error handling
-from core.error_handling import PolicyEvaluationError, safe_execute
+from core.error_handling import PolicyEvaluationError
 from core.component_health import get_health_monitor
 
 logger = logging.getLogger(__name__)

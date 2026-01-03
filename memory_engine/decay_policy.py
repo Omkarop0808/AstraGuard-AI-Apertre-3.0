@@ -5,7 +5,6 @@ Implements safe decay mechanisms with critical event protection.
 """
 
 from datetime import datetime, timedelta
-from typing import List
 
 
 class DecayPolicy:

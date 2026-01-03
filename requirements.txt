@@ -14,7 +14,7 @@ aiohttp==3.9.3
 pydantic==2.7.0
 
 # ML (CPU-only torch, sentence-transformers)
-torch==2.2.0 --index-url https://download.pytorch.org/whl/cpu
+torch==2.2.0
 sentence-transformers==5.1.2
 
 # Observability

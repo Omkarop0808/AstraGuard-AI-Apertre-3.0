@@ -9,12 +9,10 @@ Supports:
 """
 
 import redis.asyncio as aioredis
-import asyncio
 import json
-import uuid
 import logging
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 

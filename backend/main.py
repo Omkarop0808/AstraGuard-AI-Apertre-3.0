@@ -21,7 +21,6 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_client import generate_latest, CollectorRegistry, CONTENT_TYPE_LATEST
 import uvicorn
 
 # Import modules

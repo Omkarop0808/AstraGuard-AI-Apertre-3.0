@@ -11,7 +11,6 @@ Provides comprehensive health status of AstraGuard AI system:
 Integrates with Issue #14 (CircuitBreaker) and #15 (Retry).
 """
 
-import asyncio
 import logging
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
@@ -20,7 +19,7 @@ import time
 from threading import Lock
 
 from fastapi import APIRouter, Response, HTTPException
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Gauge, Counter
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Gauge
 
 # Import from core modules
 import sys
