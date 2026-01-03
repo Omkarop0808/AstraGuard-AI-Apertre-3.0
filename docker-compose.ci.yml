@@ -1,0 +1,81 @@
+# ============================================================================
+# Docker Compose for CI/CD Canary Deployment
+# ============================================================================
+# Lightweight stack with ONLY essential services for health checks
+# - API (FastAPI backend on port 8000)
+# - Redis (cache and distributed coordination)
+#
+# Excludes heavy observability stack:
+# - Prometheus (metric collection)
+# - Grafana (dashboards)
+# - Other monitoring services
+#
+# This is used in GitHub Actions canary deployment for speed and reliability
+# For full local/production stack, use docker-compose.yml
+
+services:
+  # FastAPI Backend - Core API service
+  api:
+    image: astraguard-ai:latest
+    container_name: astraguard-api-ci
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PYTHONUNBUFFERED: 1
+      PYTHONDONTWRITEBYTECODE: 1
+      ENVIRONMENT: ${ENVIRONMENT:-ci}
+      DEBUG: ${DEBUG:-false}
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - astra-network-ci
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Redis Cache & Distributed Coordination
+  redis:
+    image: redis:7-alpine
+    container_name: astraguard-redis-ci
+    ports:
+      - "6379:6379"
+    networks:
+      - astra-network-ci
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+networks:
+  astra-network-ci:
+    driver: bridge
