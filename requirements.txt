@@ -12,9 +12,9 @@ aiohttp>=3.11.0,<4.0
 pydantic==2.7.0
 httpx==0.25.0
 
-# ML/AI (CPU-only torch, no CUDA packages - for CI/GitHub Actions compatibility)
+# ML/AI (PyTorch 2.2.1 is stable and widely available for Python 3.11)
 # For GPU training locally: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-torch>=2.6.0,<3.0 --no-binary torch
+torch>=2.2.0,<3.0
 sentence-transformers==5.1.2
 
 # Observability & monitoring
