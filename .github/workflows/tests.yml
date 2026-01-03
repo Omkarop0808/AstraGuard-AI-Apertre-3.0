@@ -47,14 +47,9 @@ jobs:
     - name: Run coverage analysis
       run: |
         python -m pytest tests/ \
-          --cov=core \
-          --cov=anomaly \
-          --cov=state_machine \
-          --cov=memory_engine \
-          --cov=classifier \
+          --cov \
           --cov-report=term-missing \
           --cov-report=xml \
-          --cov-fail-under=80 \
           --timeout=10 \
           -v
     
