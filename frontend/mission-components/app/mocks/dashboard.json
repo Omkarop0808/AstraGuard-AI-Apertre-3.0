@@ -14,7 +14,7 @@
         "orbitSlot": "A1",
         "latency": 45,
         "task": "Data Dump",
-        "signal": 98
+        "signalStrength": 98
       },
       {
         "id": "sat-2",
@@ -24,7 +24,7 @@
         "orbitSlot": "B2",
         "latency": 120,
         "task": "Relay",
-        "signal": 95
+        "signalStrength": 95
       },
       {
         "id": "sat-3",
@@ -34,7 +34,7 @@
         "orbitSlot": "M1",
         "latency": 200,
         "task": "Calibration",
-        "signal": 70
+        "signalStrength": 70
       },
       {
         "id": "sat-4",
@@ -44,7 +44,7 @@
         "orbitSlot": "A2",
         "latency": 48,
         "task": "Imaging",
-        "signal": 99
+        "signalStrength": 99
       },
       {
         "id": "sat-5",
@@ -54,7 +54,7 @@
         "orbitSlot": "B3",
         "latency": 500,
         "task": "Reboot",
-        "signal": 40
+        "signalStrength": 40
       },
       {
         "id": "sat-6",
@@ -64,7 +64,7 @@
         "orbitSlot": "A3",
         "latency": 42,
         "task": "Idle",
-        "signal": 97
+        "signalStrength": 97
       }
     ],
     "phases": [

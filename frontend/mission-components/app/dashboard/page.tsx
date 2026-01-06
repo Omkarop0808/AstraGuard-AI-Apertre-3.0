@@ -51,6 +51,11 @@ const DashboardContent: React.FC = () => {
             </>
           )}
         </main>
+
+        <footer className="px-6 py-4 border-t border-slate-800 text-xs font-mono text-slate-500 uppercase tracking-widest flex justify-between items-center bg-slate-950">
+          <span>AstraGuard Defense Systems v1.0</span>
+          <span>Authorized Personnel Only • Class 1 Clearance</span>
+        </footer>
       </div>
     </div>
   );

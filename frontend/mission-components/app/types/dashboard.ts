@@ -1,12 +1,14 @@
+export type SatelliteStatus = 'Nominal' | 'Degraded' | 'Critical';
+
 export interface Satellite {
   id: string;
   name: string;
-  status: 'Nominal' | 'Degraded' | 'Critical';
+  status: SatelliteStatus;
   orbit: string;
   orbitSlot: string;
   latency: number;
   task: string;
-  signal: number;
+  signalStrength: number;
 }
 
 export interface MissionPhase {
