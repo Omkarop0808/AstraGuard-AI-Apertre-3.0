@@ -1,3 +1,6 @@
+/// <reference types="cypress" />
+/// <reference types="cypress-axe" />
+
 describe('🚀 Mission Control Dashboard E2E', () => {
     beforeEach(() => {
         cy.visit('/dashboard');
