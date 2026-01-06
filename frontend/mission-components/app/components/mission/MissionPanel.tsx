@@ -26,11 +26,11 @@ export const MissionPanel: React.FC<{ onSelectSatellite?: (satId: string) => voi
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Top: Satellite Tracker from #87 */}
-      <section className="glow-teal/50">
-        <h2 className="text-2xl font-bold mb-6 text-teal-400 glow-teal flex items-center">
+      <section className="panel-holo rounded-2xl p-6">
+        <h2 className="text-2xl font-bold mb-6 text-teal-400 glow-teal flex items-center tracking-wide uppercase">
           Satellite Status{' '}
-          <span className="ml-2 text-sm bg-teal-500/20 px-3 py-1 rounded-full">
-            {satellites.filter((s) => s.status === 'Nominal').length}/6 Nominal
+          <span className="ml-4 text-xs font-mono bg-teal-500/10 border border-teal-500/30 text-teal-300 px-3 py-1 rounded-sm">
+            {satellites.filter((s) => s.status === 'Nominal').length}/6 ONLINE
           </span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -51,8 +51,8 @@ export const MissionPanel: React.FC<{ onSelectSatellite?: (satId: string) => voi
       {/* 3-Column Layout: Map (2x) + Feed (1x) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Map Section (2x width) */}
-        <section className="lg:col-span-2 glow-teal rounded-2xl border border-teal-500/30 p-4 bg-black/50 backdrop-blur-xl">
-          <h3 className="text-lg font-bold text-teal-400 mb-4 glow-teal">Orbit Visualization</h3>
+        <section className="lg:col-span-2 panel-holo rounded-2xl p-4">
+          <h3 className="text-lg font-bold text-teal-400 mb-4 glow-teal uppercase tracking-widest pl-2 border-l-2 border-teal-500">Orbit Visualization</h3>
           <OrbitMap
             satellites={satellites}
             selectedSat={selectedSat}
@@ -65,7 +65,7 @@ export const MissionPanel: React.FC<{ onSelectSatellite?: (satId: string) => voi
         </section>
 
         {/* Anomaly Feed (1x width) */}
-        <section className="glow-magenta rounded-2xl border border-magenta-500/30 p-0">
+        <section className="panel-holo rounded-2xl p-0 border-magenta-500/30">
           <AnomalyFeed
             anomalies={anomalies}
             onAcknowledge={handleAcknowledgeAnomaly}
@@ -77,19 +77,19 @@ export const MissionPanel: React.FC<{ onSelectSatellite?: (satId: string) => voi
 
       {/* Selected Items Debug Panel */}
       {(selectedSat || selectedAnomaly) && (
-        <div className="p-4 bg-black/70 backdrop-blur-xl rounded-xl border border-teal-500/50 glow-teal grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+        <div className="panel-holo rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm border-t border-teal-500/50">
           {selectedSat && (
             <div>
-              <h4 className="font-bold text-teal-400 mb-2">Selected Satellite</h4>
+              <h4 className="font-bold text-teal-400 mb-2 uppercase tracking-widest">Selected Satellite</h4>
               <div className="space-y-1 font-mono text-gray-300">
-                <div>LEO-{selectedSat.orbitSlot} · {selectedSat.status}</div>
+                <div>LEO-{selectedSat.orbitSlot} · <span className={selectedSat.status === 'Nominal' ? 'text-green-400' : 'text-red-400'}>{selectedSat.status}</span></div>
                 <div className="text-xs opacity-75">{selectedSat.task} · {Math.round(selectedSat.latency)}ms</div>
               </div>
             </div>
           )}
           {selectedAnomaly && (
             <div>
-              <h4 className="font-bold text-magenta-400 mb-2">Selected Anomaly</h4>
+              <h4 className="font-bold text-magenta-400 mb-2 uppercase tracking-widest">Selected Anomaly</h4>
               <div className="space-y-1 font-mono text-gray-300">
                 <div>{selectedAnomaly.satellite}</div>
                 <div className="text-xs opacity-75">{selectedAnomaly.metric} · {selectedAnomaly.value}</div>

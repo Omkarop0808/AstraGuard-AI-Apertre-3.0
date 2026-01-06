@@ -17,25 +17,45 @@ body {
 :root {
   --font-geist-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --bg-gradient: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+  --bg-gradient: linear-gradient(135deg, #020205 0%, #050510 50%, #000000 100%);
 
-  /* Glow Variables */
-  --glow-teal: 0 0 8px #00f5ff, 0 0 16px #00f5ff, 0 0 24px #00f5ff;
-  --glow-cyan: 0 0 8px #06b6d4, 0 0 16px #06b6d4, 0 0 24px #06b6d4;
-  --glow-magenta: 0 0 8px #d946ef, 0 0 16px #d946ef, 0 0 24px #d946ef;
-  --glow-amber: 0 0 8px #fbbf24, 0 0 16px #fbbf24, 0 0 24px #fbbf24;
-  --glow-red: 0 0 8px #ef4444, 0 0 16px #ef4444, 0 0 24px #ef4444;
+  /* Glow Variables - Starship Theme */
+  --glow-teal: 0 0 10px rgba(0, 245, 255, 0.4), 0 0 20px rgba(0, 245, 255, 0.2);
+  --glow-cyan: 0 0 10px rgba(6, 182, 212, 0.4), 0 0 20px rgba(6, 182, 212, 0.2);
+  --glow-magenta: 0 0 10px rgba(217, 70, 239, 0.4), 0 0 20px rgba(217, 70, 239, 0.2);
+  --glow-amber: 0 0 10px rgba(251, 191, 36, 0.4), 0 0 20px rgba(251, 191, 36, 0.2);
+  --glow-red: 0 0 10px rgba(239, 68, 68, 0.4), 0 0 20px rgba(239, 68, 68, 0.2);
 }
 
 .dashboard-container {
   background: var(--bg-gradient);
-  background-image:
-    radial-gradient(2px 2px at 20px 30px, #eee, transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(120, 119, 198, 0.8), transparent),
-    radial-gradient(1px 1px at 90px 40px, #fff, transparent);
-  background-repeat: repeat;
-  background-size: 100px 100px;
   background-attachment: fixed;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Parallax Starfield */
+.dashboard-container::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    radial-gradient(1px 1px at 10% 10%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 20% 20%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 30% 30%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 40% 40%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 50% 50%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(2px 2px at 60% 60%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1px 1px at 70% 70%, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 80% 80%, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(2px 2px at 90% 90%, rgba(255, 255, 255, 0.8), transparent);
+  background-size: 550px 550px;
+  opacity: 0.6;
+  z-index: 0;
+  pointer-events: none;
 }
 
 /* Utilities using vars */
@@ -192,4 +212,56 @@ body {
 
 .animate-pulse-slow {
   animation: pulse-slow 3s infinite ease-in-out;
+}
+
+/* Holographic Panel */
+.panel-holo {
+  background: rgba(0, 20, 30, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 245, 255, 0.15);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    inset 0 0 20px rgba(0, 245, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scanline Effect */
+.panel-holo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(0, 245, 255, 0.5), transparent);
+  animation: scanline 4s linear infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel-holo:hover::after {
+  opacity: 0.5;
+}
+
+@keyframes scanline {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.8;
+  }
+
+  90% {
+    opacity: 0.8;
+  }
+
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
 }
