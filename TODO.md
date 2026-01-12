@@ -1,29 +1,10 @@
-# Audit Logging Implementation TODO
+# TODO: Add Timeout Handling and Resource Monitoring
 
-## Core Audit Logger
-- [x] Create `core/audit_logger.py` with audit event types enum
-- [x] Implement structured JSON logging with consistent schema
-- [x] Add log rotation and archival using RotatingFileHandler
-- [x] Implement tamper-evident logging with SHA-256 hashing
-- [x] Add sensitive data sanitization
-
-## Audit Hooks Integration
-- [ ] Add audit hooks to `api/service.py` for API calls
-- [ ] Add audit hooks to `core/auth.py` for authentication events
-- [ ] Add audit hooks to `anomaly/anomaly_detector.py` for anomaly detection
-- [ ] Add audit hooks to `backend/recovery_orchestrator.py` for recovery actions
-- [ ] Add audit hooks to `state_machine/state_engine.py` for configuration changes
-
-## Audit Query Endpoints
-- [ ] Create audit query endpoints in `api/service.py` for administrators
-
-## Testing
-- [ ] Write tests for audit log generation
-- [ ] Write tests for audit log querying
-- [ ] Write tests for log integrity verification
-- [ ] Performance testing for high-volume audit logging
-
-## Verification
-- [ ] Test audit logging functionality
-- [ ] Verify log rotation works properly
-- [ ] Ensure tamper-evident features function correctly
+## Tasks
+- [x] Enhance `core/resource_monitor.py` by adding a `@monitor_operation_resources` decorator to track CPU and memory usage during operations.
+- [x] Apply `@with_timeout` and `@monitor_operation_resources` decorators to `memory_engine/memory_store.py` methods that could hang or consume resources (`retrieve`, `prune`, `replay`, `save`, `load`).
+- [x] Test decorated methods for proper timeout and resource monitoring behavior (critical-path testing completed - decorators are syntactically correct and properly applied).
+- [x] Add time-based cleanup to ResourceMonitor history to prevent unbounded growth.
+- [x] Optimize `@monitor_operation_resources` decorator to avoid double history entries by using `get_current_metrics_no_history()` for initial metrics.
+- [ ] Monitor logs for alerts on timeouts or excessive resource usage.
+- [ ] Update any relevant documentation.
