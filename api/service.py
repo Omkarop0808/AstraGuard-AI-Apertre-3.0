@@ -17,9 +17,6 @@ import secrets
 from core.secrets import get_secret, mask_secret
 from pydantic import BaseModel
 
-# Import centralized secrets management
-from core.secrets import get_secret, get_secret_masked
-
 
 from api.models import (
     TelemetryInput,

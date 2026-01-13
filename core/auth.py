@@ -673,8 +673,6 @@ class UserResponse(BaseModel):
     last_login: Optional[datetime]
     is_active: bool
 
-        return key
-
     def check_rate_limit(self, api_key: str) -> None:
         """
         Check if the API key has exceeded its rate limit.

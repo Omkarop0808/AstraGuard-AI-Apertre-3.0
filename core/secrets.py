@@ -762,9 +762,12 @@ def store_secret(key: str, value: str, **kwargs) -> SecretMetadata:
     """Store a secret using the global manager."""
     return get_secrets_manager().store_secret(key, value, **kwargs)
 
-def get_secret(key: str, **kwargs) -> str:
-    """Get a secret using the global manager."""
-    return get_secrets_manager().get_secret(key, **kwargs)
+def get_secret(key: str, default: Optional[str] = None, **kwargs) -> Optional[str]:
+    """Get a secret using the global manager. Returns default if secret not found."""
+    try:
+        return get_secrets_manager().get_secret(key, **kwargs)
+    except (KeyError, RuntimeError):
+        return default
 
 def rotate_secret(key: str, **kwargs) -> SecretMetadata:
     """Rotate a secret using the global manager."""
