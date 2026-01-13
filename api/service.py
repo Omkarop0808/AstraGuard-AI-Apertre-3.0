@@ -473,11 +473,49 @@ async def get_metrics():
 @app.get("/health", response_model=HealthCheckResponse)
 async def health_check():
     """Health check endpoint."""
-    return HealthCheckResponse(
-        status="healthy",
-        version="1.0.0",
-        timestamp=datetime.now()
-    )
+    try:
+        # Get component health status
+        health_monitor = get_health_monitor()
+        components = health_monitor.get_all_health()
+
+        # Determine overall status
+        all_healthy = all(
+            c.get("status") == "HEALTHY" for c in components.values()
+        )
+
+        # Get system uptime
+        uptime = time.time() - start_time
+
+        # Get current mission phase
+        try:
+            mission_phase = state_machine.get_current_phase().value
+        except:
+            mission_phase = "UNKNOWN"
+
+        # Enhanced health response with more details
+        return HealthCheckResponse(
+            status="healthy" if all_healthy else "degraded",
+            version="1.0.0",
+            timestamp=datetime.now(),
+            uptime_seconds=round(uptime, 2),
+            mission_phase=mission_phase,
+            components_status={
+                name: {
+                    "status": comp.get("status", "UNKNOWN"),
+                    "last_check": comp.get("timestamp"),
+                    "details": comp.get("details", "")
+                }
+                for name, comp in components.items()
+            }
+        )
+    except Exception as e:
+        # If health check fails, return degraded status
+        return HealthCheckResponse(
+            status="unhealthy",
+            version="1.0.0",
+            timestamp=datetime.now(),
+            error=str(e)
+        )
 
 
 @app.get("/metrics")

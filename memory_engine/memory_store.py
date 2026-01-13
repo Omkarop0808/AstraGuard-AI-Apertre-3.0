@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 from core.timeout_handler import with_timeout
 from core.resource_monitor import monitor_operation_resources
 
+from core.timeout_handler import with_timeout
 
 logger = logging.getLogger(__name__)
 
@@ -101,6 +102,7 @@ class AdaptiveMemoryStore:
         self.storage_path = "memory_engine/memory_store.pkl"
         self._lock = threading.RLock()  # Reentrant lock for thread safety
 
+    @with_timeout(seconds=3.0, operation_name="memory_write")
     def write(
         self,
         embedding: Union[List[float], "np.ndarray"],
@@ -125,25 +127,23 @@ class AdaptiveMemoryStore:
         if timestamp is None:
             timestamp = datetime.now()
 
-        with self._lock:
-            # Check for similar existing events (recurrence)
-            similar = self._find_similar(embedding, threshold=DEFAULT_SIMILARITY_THRESHOLD)
+        # Check for similar existing events (recurrence)
+        similar = self._find_similar(embedding, threshold=0.85)
 
-            if similar:
-                # Boost recurrence count for existing event
-                similar.recurrence_count += 1
-                similar.metadata["last_seen"] = timestamp
-            else:
-                # Add new event
-                event = MemoryEvent(embedding, metadata, timestamp)
-                self.memory.append(event)
+        if similar:
+            # Boost recurrence count for existing event
+            similar.recurrence_count += 1
+            similar.metadata["last_seen"] = timestamp
+        else:
+            # Add new event
+            event = MemoryEvent(embedding, metadata, timestamp)
+            self.memory.append(event)
 
-            # Auto-prune if capacity exceeded
-            if len(self.memory) > self.max_capacity:
-                self.prune(keep_critical=True)
+        # Auto-prune if capacity exceeded
+        if len(self.memory) > self.max_capacity:
+            self.prune(keep_critical=True)
 
-    @with_timeout(seconds=30.0)
-    @monitor_operation_resources()
+    @with_timeout(seconds=5.0, operation_name="memory_retrieve")
     def retrieve(
         self, query_embedding: Union[List[float], "np.ndarray"], top_k: int = DEFAULT_TOP_K
     ) -> List[Tuple[float, Dict, datetime]]:
