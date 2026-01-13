@@ -12,8 +12,7 @@ import time
 import os
 from typing import Type
 
-from backend.storage.interface import Storage
-from backend.storage.memory import MemoryStorage
+from backend.storage import Storage, MemoryStorage
 from backend.storage.redis_adapter import RedisAdapter
 
 # Configure pytest-asyncio to handle async fixtures and tests
