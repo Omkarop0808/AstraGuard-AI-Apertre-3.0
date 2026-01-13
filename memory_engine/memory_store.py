@@ -1,7 +1,7 @@
 """
 Adaptive Memory Store with Temporal Weighting
 
-Self-updating memory that prioritizes recent and recurring events.
+Self-updating the memory that prioritizes recent and recurring events.
 """
 
 try:
