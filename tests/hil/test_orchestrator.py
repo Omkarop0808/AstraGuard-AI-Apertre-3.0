@@ -22,7 +22,7 @@ ResultStorage = storage_module.ResultStorage
 def orchestrator():
     """Create orchestrator instance."""
     return ScenarioOrchestrator(
-        scenario_dir="astraguard/hil/scenarios/sample_scenarios"
+        scenario_dir="src/astraguard/hil/scenarios/sample_scenarios"
     )
 
 
