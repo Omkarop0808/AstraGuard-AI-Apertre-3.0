@@ -70,12 +70,12 @@ class MetricsStorage:
                 "stats_by_satellite": summary.get("stats_by_satellite", {}),
             }
 
-        summary_path = self.metrics_dir / "latency_summary.json"
-        summary_path.write_text(json.dumps(summary_dict, indent=2, default=str))
+            summary_path = self.metrics_dir / "latency_summary.json"
+            summary_path.write_text(json.dumps(summary_dict, indent=2, default=str))
 
-        # Raw CSV for external analysis
-        csv_path = self.metrics_dir / "latency_raw.csv"
-        collector.export_csv(str(csv_path))
+            # Raw CSV for external analysis
+            csv_path = self.metrics_dir / "latency_raw.csv"
+            collector.export_csv(str(csv_path))
 
             return {"summary": str(summary_path), "raw": str(csv_path)}
         except (OSError, PermissionError) as e:
