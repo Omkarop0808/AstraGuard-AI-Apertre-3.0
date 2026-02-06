@@ -30,13 +30,6 @@ from api.models import (
     AnomalyHistoryQuery,
     AnomalyHistoryResponse,
     HealthCheckResponse,
-    UserCreateRequest,
-    UserResponse,
-    APIKeyCreateRequest,
-    APIKeyResponse,
-    APIKeyCreateResponse,
-    LoginRequest,
-    TokenResponse,
 )
 from core.auth import (
     get_auth_manager,
@@ -49,6 +42,13 @@ from core.auth import (
     Permission,
     User,
     APIKey,
+    UserCreateRequest,
+    UserResponse,
+    APIKeyCreateRequest,
+    APIKeyResponse,
+    APIKeyCreateResponse,
+    LoginRequest,
+    TokenResponse,
 )
 from api.auth import get_api_key
 from state_machine.state_engine import StateMachine, MissionPhase
