@@ -25,8 +25,6 @@ except NameError as e:
     raise RuntimeError("Invalid runtime environment: __file__ is undefined") from e
 
 project_root_str: str = str(project_root)
-        extra={"project_root": project_root_str},
-    )
 
 # Import FastAPI application
 try:
