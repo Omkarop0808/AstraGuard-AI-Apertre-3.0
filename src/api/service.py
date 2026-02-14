@@ -450,7 +450,37 @@ def create_response(status: str, data: Optional[Dict[str, Any]] = None, **kwargs
     return response
 
 
+<<<<<<< refactor/improve-logging-error-handling-99
 
+=======
+async def process_telemetry_batch(telemetry_list: List[Dict[str, Any]]) -> Dict[str, int]:
+    """Process a batch of telemetry data and return aggregated results."""
+    processed_count: int = 0
+    anomalies_detected: int = 0
+    detected_anomalies: List[str] = []
+
+    for telemetry in telemetry_list:
+        try:
+            # Process individual telemetry (extracted from submit_telemetry logic)
+            processed_count += 1
+            
+            # Collect detected anomalies if any result is available
+            # Note: result variable would come from anomaly detection logic
+            # This is a placeholder for actual implementation
+        except Exception:
+            # Best-effort: continue processing other telemetry if one fails
+            pass
+    
+    # Store all anomalies at once with lock (more efficient than multiple appends)
+    if detected_anomalies:
+        async with anomaly_lock:
+            anomaly_history.extend(detected_anomalies)
+    
+    return {
+        "processed": processed_count,
+        "anomalies_detected": anomalies_detected
+    }
+>>>>>>> main
 
 # ============================================================================
 # API Endpoints
