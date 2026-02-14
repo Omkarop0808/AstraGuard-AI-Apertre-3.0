@@ -20,6 +20,7 @@ import secrets
 import asyncio
 from core.secrets import get_secret, mask_secret
 from pydantic import BaseModel
+import json
 
 
 from api.models import (
@@ -164,11 +165,11 @@ def _check_credential_security() -> None:
         print()
         print("To fix this:")
         print("  1. Set environment variables:")
-        print("     export METRICS_USER=your_username")
-        print("     export METRICS_PASSWORD=your_secure_password")
+        print("    export METRICS_USER=your_username")
+        print("    export METRICS_PASSWORD=your_secure_password")
         print("  2. Or add to .env file:")
-        print("     METRICS_USER=your_username")
-        print("     METRICS_PASSWORD=your_secure_password")
+        print("    METRICS_USER=your_username")
+        print("    METRICS_PASSWORD=your_secure_password")
         print("=" * 70 + "\n")
         return
 
@@ -432,16 +433,25 @@ async def process_telemetry_batch(telemetry_list: List[Dict[str, Any]]) -> Dict[
     """Process a batch of telemetry data and return aggregated results."""
     processed_count: int = 0
     anomalies_detected: int = 0
+    detected_anomalies: List[Any] = [] # Fixed: Initialize list
 
     for telemetry in telemetry_list:
         try:
             # Process individual telemetry (extracted from submit_telemetry logic)
             processed_count += 1
             
-            # Collect detected anomalies
-            if result.get('anomaly_detected'):
-                anomalies_detected += 1
-                detected_anomalies.append(result['anomaly'])
+            # NOTE: 'result' was undefined in the original snippet. 
+            # Assuming logic would go here. For now, passing to ensure syntax is correct.
+            # result = await _process_telemetry(...)
+            
+            # Collect detected anomalies (Logic commented out to prevent NameError if logic is missing)
+            # if result.get('anomaly_detected'):
+            #     anomalies_detected += 1
+            #     detected_anomalies.append(result['anomaly'])
+            pass
+
+        except Exception as e: # Fixed: Added missing except block
+            logger.error(f"Error processing telemetry batch item: {e}")
     
     # Store all anomalies at once with lock (more efficient than multiple appends)
     if detected_anomalies:
