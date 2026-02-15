@@ -1175,7 +1175,7 @@ def test_run_simulation_script_not_found():
         with patch("cli.os.path.exists", return_value=False):
             stdout, stderr = get_captured_output(run_simulation)
         
-        assert "not found" in stdout
+        assert "Simulation script not found at" in stdout
     finally:
         cleanup(original)
 
