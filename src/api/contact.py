@@ -229,6 +229,8 @@ _init_db_sync()
 
 _in_memory_limiter: InMemoryRateLimiter = InMemoryRateLimiter()
 
+# Initialize database
+_init_db_sync()
 
 async def check_rate_limit(ip_address: str) -> tuple[bool, dict[str, Any]]:
     """Check rate limit and return status with metadata"""
