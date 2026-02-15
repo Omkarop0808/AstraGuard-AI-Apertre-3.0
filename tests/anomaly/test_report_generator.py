@@ -840,19 +840,18 @@ class TestErrorHandling:
         """Test handling of invalid path characters."""
         generator.record_anomaly("test", "HIGH", 0.9, "test", {})
         
-        # Test will vary by OS, but should handle invalid paths
+        # Test will vary by OS, but should handle invalid paths by raising an error
         with tempfile.TemporaryDirectory() as tmpdir:
             # Path with invalid characters (on Windows)
             if os.name == 'nt':
                 file_path = os.path.join(tmpdir, "report<>:.json")
             else:
+                # NUL byte is invalid in POSIX paths and should raise an error
                 file_path = os.path.join(tmpdir, "report\x00.json")
-            
-            try:
+
+            # Expect an error when attempting to export to an invalid path
+            with pytest.raises((OSError, ValueError)):
                 generator.export_json(file_path)
-            except (OSError, ValueError):
-                # Expected to fail with invalid path
-                pass
 
     def test_export_json_with_very_long_path(self, generator):
         """Test handling of very long file paths."""
