@@ -278,6 +278,7 @@ def _make_signal_handler(label: str):
     return handler
 
 
+
 if __name__ == "__main__":
     # Register signal handlers before anything else so the process is
     # always interruptible, even if app loading takes a while.
