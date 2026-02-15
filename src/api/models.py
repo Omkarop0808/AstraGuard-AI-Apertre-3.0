@@ -590,17 +590,3 @@ class PrecisionMetrics(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now, description="Calculation timestamp")
     
     model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
-
-
-class FalsePositivesMetrics(BaseModel):
-    """Analytics response for false positive metrics."""
-    
-    false_positive_rate: float = Field(..., ge=0.0, le=1.0, description="Overall false positive rate (0.0-1.0)")
-    total_feedback: int = Field(..., ge=0, description="Total number of feedback items analyzed")
-    false_positives_count: int = Field(..., ge=0, description="Number of false positive detections")
-    true_positives_count: int = Field(..., ge=0, description="Number of true positive detections")
-    by_anomaly_type: Dict[str, float] = Field(default_factory=dict, description="False positive rate by anomaly type")
-    by_mission_phase: Dict[str, float] = Field(default_factory=dict, description="False positive rate by mission phase")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Calculation timestamp")
-    
-    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})

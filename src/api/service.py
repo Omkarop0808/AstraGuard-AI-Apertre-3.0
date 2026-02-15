@@ -484,6 +484,28 @@ async def process_telemetry_batch(telemetry_list: List[Dict[str, Any]]) -> Dict[
         "anomalies_detected": anomalies_detected
     }
 
+    for telemetry in telemetry_list:
+        try:
+            # Process individual telemetry (extracted from submit_telemetry logic)
+            processed_count += 1
+            
+            # Collect detected anomalies
+            # Note: This function is incomplete and needs proper telemetry processing logic
+            # For now, just count processed items
+        except Exception as e:
+            logger.error(f"Error processing telemetry in batch: {e}")
+            continue
+    
+    # Store all anomalies at once with lock (more efficient than multiple appends)
+    if detected_anomalies:
+        async with anomaly_lock:
+            anomaly_history.extend(detected_anomalies)
+    
+    return {
+        "processed": processed_count,
+        "anomalies_detected": anomalies_detected
+    }
+
 # ============================================================================
 # API Endpoints
 # ============================================================================
@@ -1451,131 +1473,6 @@ async def get_precision_metrics(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to calculate precision metrics: {str(e)}"
-        ) from e
-
-
-@app.get("/api/v1/analytics/false_positives", response_model=FalsePositivesMetrics, status_code=status.HTTP_200_OK)
-async def get_false_positives_metrics(
-    current_user: User = Depends(require_analyst)
-) -> FalsePositivesMetrics:
-    """
-    Calculate false positive metrics from operator feedback.
-    
-    False Positive Rate = False Positives / Total Feedback
-    - False Positives: Feedback labeled as "wrong" or "insufficient"
-    - True Positives: Feedback labeled as "correct"
-    
-    This endpoint analyzes both pending and processed feedback to calculate
-    overall false positive rate and breakdowns by anomaly type and mission phase.
-    
-    Requires analyst, operator, or admin role authentication.
-    
-    Args:
-        current_user: Authenticated user (analyst, operator, or admin)
-    
-    Returns:
-        FalsePositivesMetrics with overall false positive rate and detailed breakdowns
-    
-    Raises:
-        HTTPException 401: Authentication required
-        HTTPException 403: Insufficient permissions
-        HTTPException 500: Internal server error during calculation
-    """
-    try:
-        import json
-        from pathlib import Path
-        from collections import defaultdict
-        
-        # Load feedback from both pending and processed files
-        feedback_data = []
-        
-        # Load pending feedback
-        pending_file = Path("feedback_pending.json")
-        if pending_file.exists():
-            try:
-                pending = json.loads(pending_file.read_text())
-                if isinstance(pending, list):
-                    feedback_data.extend(pending)
-            except json.JSONDecodeError:
-                logger.warning("feedback_pending.json is corrupted, skipping")
-        
-        # Load processed feedback
-        processed_file = Path("feedback_processed.json")
-        if processed_file.exists():
-            try:
-                processed = json.loads(processed_file.read_text())
-                if isinstance(processed, list):
-                    feedback_data.extend(processed)
-            except json.JSONDecodeError:
-                logger.warning("feedback_processed.json is corrupted, skipping")
-        
-        # Calculate metrics
-        total_feedback = 0
-        false_positives = 0
-        true_positives = 0
-        
-        # Track by anomaly type and mission phase
-        by_type = defaultdict(lambda: {"false_positives": 0, "total": 0})
-        by_phase = defaultdict(lambda: {"false_positives": 0, "total": 0})
-        
-        for item in feedback_data:
-            label = item.get('label')
-            if not label:
-                continue  # Skip items without labels
-            
-            total_feedback += 1
-            anomaly_type = item.get('anomaly_type', 'unknown')
-            mission_phase = item.get('mission_phase', 'unknown')
-            
-            # Count false positives vs true positives
-            if label in ['wrong', 'insufficient']:
-                false_positives += 1
-                by_type[anomaly_type]["false_positives"] += 1
-                by_phase[mission_phase]["false_positives"] += 1
-            elif label == 'correct':
-                true_positives += 1
-            
-            by_type[anomaly_type]["total"] += 1
-            by_phase[mission_phase]["total"] += 1
-        
-        # Calculate overall false positive rate
-        if total_feedback > 0:
-            false_positive_rate = false_positives / total_feedback
-        else:
-            false_positive_rate = 0.0
-        
-        # Calculate false positive rate by anomaly type
-        fp_rate_by_type = {}
-        for anom_type, counts in by_type.items():
-            if counts["total"] > 0:
-                fp_rate_by_type[anom_type] = counts["false_positives"] / counts["total"]
-        
-        # Calculate false positive rate by mission phase
-        fp_rate_by_phase = {}
-        for phase, counts in by_phase.items():
-            if counts["total"] > 0:
-                fp_rate_by_phase[phase] = counts["false_positives"] / counts["total"]
-        
-        logger.info(
-            f"False positive metrics calculated: {false_positive_rate:.2f} "
-            f"({false_positives}/{total_feedback} false positives) for user {current_user.username}"
-        )
-        
-        return FalsePositivesMetrics(
-            false_positive_rate=round(false_positive_rate, 4),
-            total_feedback=total_feedback,
-            false_positives_count=false_positives,
-            true_positives_count=true_positives,
-            by_anomaly_type=fp_rate_by_type,
-            by_mission_phase=fp_rate_by_phase,
-            timestamp=datetime.now()
-        )
-        
-    except Exception as e:
-        logger.error(f"Failed to calculate false positive metrics: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to calculate false positive metrics: {str(e)}"
         ) from e
 
 
