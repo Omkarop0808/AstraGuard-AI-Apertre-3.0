@@ -59,3 +59,7 @@ jsonschema>=4.0.0,<5.0
 pytest>=8.0.0
 pytest-asyncio>=0.24.0
 tenacity>=8.2.3
+
+# API Response Optimization
+orjson>=3.9.0  # Fast JSON serialization
+brotli>=1.0.9  # Brotli compression support

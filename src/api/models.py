@@ -321,6 +321,26 @@ class AnomalyHistoryResponse(BaseModel):
     end_time: Optional[datetime]
 
 
+class PaginatedAnomalyHistoryResponse(BaseModel):
+    """Paginated response with anomaly history."""
+    items: List[AnomalyResponse]
+    total_count: int
+    limit: int
+    offset: int
+    has_more: bool
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+
+class PaginatedAPIKeysResponse(BaseModel):
+    """Paginated response for API keys list."""
+    items: List['APIKeyResponse']
+    total_count: int
+    limit: int
+    offset: int
+    has_more: bool
+
+
 class HealthCheckResponse(BaseModel):
     """Health check response."""
     status: str

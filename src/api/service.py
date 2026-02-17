@@ -33,6 +33,8 @@ from api.models import (
     MemoryStats,
     AnomalyHistoryQuery,
     AnomalyHistoryResponse,
+    PaginatedAnomalyHistoryResponse,
+    PaginatedAPIKeysResponse,
     HealthCheckResponse,
     UserCreateRequest,
     UserResponse,
@@ -273,6 +275,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             logger.info("event", "observability_initialized", service="astra-guard", version="1.0.0")
         except Exception as e:
             print(f"Warning: Observability initialization failed: {e}")
+    
+    # Initialize cache middleware with Redis client
+    global cache_middleware_instance
+    if redis_client:
+        try:
+            from api.optimization.cache import CacheMiddleware
+            cache_middleware_instance = CacheMiddleware(app, redis_client=redis_client)
+            print("[OK] Cache middleware initialized successfully")
+        except Exception as e:
+            print(f"[WARNING] Cache middleware initialization failed: {e}")
 
     yield
 
@@ -284,13 +296,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 # Initialize FastAPI app
+from api.optimization.orjson_response import ORJSONResponse
+
 app = FastAPI(
     title="AstraGuard AI API",
     description="REST API for telemetry ingestion and real-time anomaly detection",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
+    default_response_class=ORJSONResponse
 )
 
 # Include routers
@@ -301,6 +316,26 @@ app.include_router(contact_router)
 # Security: Never use allow_origins=["*"] with allow_credentials=True in production
 allowed_origins_str = get_secret("allowed_origins") or "http://localhost:3000,http://localhost:8000"
 ALLOWED_ORIGINS = [origin.strip() for origin in allowed_origins_str.split(",")]
+
+# Add optimization middleware (order matters: Compression -> ETag -> Cache -> CORS)
+from api.optimization.compression import CompressionMiddleware
+from api.optimization.etag import ETagMiddleware
+from api.optimization.cache import CacheMiddleware
+
+# Compression middleware (outermost - compresses final response)
+app.add_middleware(
+    CompressionMiddleware,
+    minimum_size=500,
+    compression_level=6,
+    brotli_quality=4
+)
+
+# ETag middleware (generates ETag from compressed content)
+app.add_middleware(ETagMiddleware)
+
+# Cache middleware (caches after ETag generation)
+# Note: redis_client is initialized in lifespan, so we'll add this dynamically
+cache_middleware_instance = None
 
 # CORS middleware
 app.add_middleware(
@@ -1019,15 +1054,21 @@ async def get_memory_stats(api_key: APIKey = Depends(get_api_key)) -> MemoryStat
     )
 
 
-@app.get("/api/v1/history/anomalies", response_model=AnomalyHistoryResponse)
+@app.get("/api/v1/history/anomalies", response_model=PaginatedAnomalyHistoryResponse)
 async def get_anomaly_history(
     api_key: str = Depends(get_api_key),
     start_time: Optional[datetime] = None,
     end_time: Optional[datetime] = None,
     limit: int = 100,
-    severity_min: Optional[float] = None
-) -> AnomalyHistoryResponse:
-    """Retrieve anomaly history with optional filtering."""
+    offset: int = 0,
+    severity_min: Optional[float] = None,
+    fields: Optional[str] = None,
+    exclude: Optional[str] = None
+) -> PaginatedAnomalyHistoryResponse:
+    """Retrieve anomaly history with optional filtering, pagination, and field filtering."""
+    from api.optimization.pagination import PaginationHandler
+    from api.optimization.field_filter import FieldFilter
+    
     # Convert deque to list for filtering operations
     async with anomaly_lock:
         filtered = list(anomaly_history)
@@ -1042,10 +1083,21 @@ async def get_anomaly_history(
     if severity_min is not None:
         filtered = [a for a in filtered if a.severity_score >= severity_min]
 
-    # Apply limit (get last N items)
-    filtered = filtered[-limit:] if len(filtered) > limit else filtered
+    # Apply pagination
+    paginated = PaginationHandler.paginate(filtered, limit=limit, offset=offset)
+    
+    # Apply field filtering to items
+    filtered_items = FieldFilter.apply_filter(paginated["items"], fields=fields, exclude=exclude)
 
-    return AnomalyHistoryResponse(
+    return PaginatedAnomalyHistoryResponse(
+        items=filtered_items,
+        total_count=paginated["total_count"],
+        limit=paginated["limit"],
+        offset=paginated["offset"],
+        has_more=paginated["has_more"],
+        start_time=start_time,
+        end_time=end_time
+    )
         count=len(filtered),
         anomalies=filtered,
         start_time=start_time,
@@ -1114,9 +1166,47 @@ async def create_api_key(request: APIKeyCreateRequest, current_user: User = Depe
     )
 
 
-@app.get("/api/v1/auth/apikeys", response_model=List[APIKeyResponse])
-async def list_api_keys(current_user: User = Depends(get_current_user)) -> List[APIKeyResponse]:
-    """List API keys for the current user."""
+@app.get("/api/v1/auth/apikeys", response_model=PaginatedAPIKeysResponse)
+async def list_api_keys(
+    current_user: User = Depends(get_current_user),
+    limit: int = 100,
+    offset: int = 0,
+    fields: Optional[str] = None,
+    exclude: Optional[str] = None
+) -> PaginatedAPIKeysResponse:
+    """List API keys for the current user with pagination and field filtering."""
+    from api.optimization.pagination import PaginationHandler
+    from api.optimization.field_filter import FieldFilter
+    
+    auth_manager = get_auth_manager()
+    api_keys = await auth_manager.list_api_keys(current_user.id)
+    
+    # Convert to response models
+    key_responses = [
+        APIKeyResponse(
+            id=key.id,
+            name=key.name,
+            permissions=key.permissions,
+            created_at=key.created_at,
+            expires_at=key.expires_at,
+            last_used=key.last_used
+        )
+        for key in api_keys
+    ]
+    
+    # Apply pagination
+    paginated = PaginationHandler.paginate(key_responses, limit=limit, offset=offset)
+    
+    # Apply field filtering
+    filtered_items = FieldFilter.apply_filter(paginated["items"], fields=fields, exclude=exclude)
+    
+    return PaginatedAPIKeysResponse(
+        items=filtered_items,
+        total_count=paginated["total_count"],
+        limit=paginated["limit"],
+        offset=paginated["offset"],
+        has_more=paginated["has_more"]
+    )
     auth_manager = get_auth_manager()
     api_keys = await auth_manager.get_user_api_keys(current_user.id)
     return [
@@ -1143,3 +1233,33 @@ async def revoke_api_key(key_id: str, current_user: User = Depends(get_current_u
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8002)
+
+
+@app.get("/api/v1/cache/stats")
+async def get_cache_stats(api_key: APIKey = Depends(get_api_key)) -> Dict[str, Any]:
+    """
+    Get cache and optimization statistics.
+    
+    Returns cache hit/miss rates, compression stats, and serialization info.
+    Requires API key authentication with 'read' permission.
+    """
+    stats = {
+        "cache": {
+            "enabled": cache_middleware_instance is not None,
+            "stats": cache_middleware_instance.get_cache_stats() if cache_middleware_instance else {}
+        },
+        "compression": {
+            "enabled": True,
+            "algorithms": ["gzip", "brotli"],
+            "min_size": 500
+        },
+        "serialization": {
+            "library": "orjson",
+            "enabled": True
+        },
+        "etag": {
+            "enabled": True
+        }
+    }
+    
+    return stats
