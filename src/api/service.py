@@ -359,6 +359,15 @@ app.add_middleware(
     sample_rate=sample_rate,
 )
 
+# Monitoring middleware (Issue #950)
+from api.monitoring.correlation import CorrelationMiddleware
+from api.monitoring.tracing import TracingMiddleware
+from api.monitoring.metrics import MetricsMiddleware
+
+app.add_middleware(MetricsMiddleware)
+app.add_middleware(TracingMiddleware)
+app.add_middleware(CorrelationMiddleware)
+
 security = HTTPBasic()
 
 # Credential validation flag (set during startup)
@@ -1529,6 +1538,43 @@ async def list_api_keys(current_user: User = Depends(get_current_user)) -> List[
         )
         for key in api_keys
     ]
+
+
+# ============================================================================
+# Monitoring and Observability Endpoints (Issue #950)
+# ============================================================================
+
+@app.get("/api/v1/monitoring/dashboard")
+async def get_monitoring_dashboard(api_key: APIKey = Depends(get_api_key)) -> Dict[str, Any]:
+    """Get comprehensive monitoring dashboard data"""
+    from api.monitoring.dashboard import get_dashboard_data
+    return get_dashboard_data()
+
+
+@app.get("/api/v1/monitoring/metrics")
+async def get_monitoring_metrics(api_key: APIKey = Depends(get_api_key)) -> Dict[str, Any]:
+    """Get detailed performance metrics"""
+    from api.monitoring.metrics import get_metrics
+    return get_metrics()
+
+
+@app.get("/api/v1/monitoring/sla")
+async def get_sla_status_endpoint(api_key: APIKey = Depends(get_api_key)) -> Dict[str, Any]:
+    """Get SLA compliance status"""
+    from api.monitoring.metrics import get_sla_status
+    return get_sla_status()
+
+
+@app.get("/api/v1/monitoring/analytics")
+async def get_usage_analytics(api_key: APIKey = Depends(get_api_key)) -> Dict[str, Any]:
+    """Get usage analytics"""
+    from api.monitoring.analytics import get_analytics
+    return get_analytics()
+
+
+# ============================================================================
+# End Monitoring Endpoints
+# ============================================================================
 
 
 @app.delete("/api/v1/auth/apikeys/{key_id}")
